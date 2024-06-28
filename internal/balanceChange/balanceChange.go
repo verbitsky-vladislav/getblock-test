@@ -1,17 +1,17 @@
-package balance_change
+package balanceChange
 
 import (
 	"getblock-test/internal/getblock"
-	logger "getblock-test/pkg"
+	"log"
 	"math/big"
 	"time"
 )
 
 type BalanceChange struct {
-	getBlockClient getblock.GetBlockClientService
+	getBlockClient getblock.GetBlockClient
 }
 
-func NewBalanceChange(getBlockService getblock.GetBlockClientService) *BalanceChange {
+func NewBalanceChange(getBlockService getblock.GetBlockClient) *BalanceChange {
 	return &BalanceChange{
 		getBlockClient: getBlockService,
 	}
@@ -50,10 +50,8 @@ func (bc *BalanceChange) GetAddressWithLargestBalanceChange() (string, error) {
 		}
 	}
 
-	bc.logAddressChanges(filteredChanges)
-
 	averageTime := time.Since(startTime) / 100
-	logger.Info("Average execution time per block: ", averageTime)
+	log.Printf("Average time is %s", averageTime.String())
 
 	return maxChangeAddress, nil
 }

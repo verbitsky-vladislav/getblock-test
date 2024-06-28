@@ -1,9 +1,9 @@
 package main
 
 import (
-	balance_change "getblock-test/internal/balance-change"
+	"getblock-test/internal/balanceChange"
 	"getblock-test/internal/getblock"
-	logger "getblock-test/pkg"
+	"log"
 )
 
 var apiKey = ""
@@ -14,11 +14,11 @@ func main() {
 		apiKey,
 	)
 
-	balanceChange := balance_change.NewBalanceChange(getBlockClient)
+	balanceChangeService := balanceChange.NewBalanceChange(*getBlockClient)
 
-	address, err := balanceChange.GetAddressWithLargestBalanceChange()
+	address, err := balanceChangeService.GetAddressWithLargestBalanceChange()
 	if err != nil {
 		return
 	}
-	logger.Info(address)
+	log.Printf("Winner address: %s", address)
 }

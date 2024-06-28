@@ -1,4 +1,4 @@
-package balance_change
+package balanceChange
 
 import (
 	"getblock-test/internal/utils/types/eth"

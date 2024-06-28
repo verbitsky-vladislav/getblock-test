@@ -3,59 +3,53 @@ package getblock
 import (
 	"bytes"
 	"encoding/json"
+	"errors"
 	"getblock-test/internal/utils/types"
 	"getblock-test/internal/utils/types/eth"
-	logger "getblock-test/pkg"
 	"net/http"
 )
 
-type GetBlockClientService interface {
-	GetLastBlockNumber() (*types.GetBlockBaseResponse[string], error)
-	GetBlock(blockNumber string) (*types.GetBlockBaseResponse[eth.EthBlock], error)
-}
-
-type getBlockClient struct {
+type GetBlockClient struct {
 	baseURL string
-	aPIKey  string
 	client  *http.Client
 }
 
-func NewGetBlockClient(apiKey string) *getBlockClient {
-	return &getBlockClient{
+func NewGetBlockClient(apiKey string) *GetBlockClient {
+	return &GetBlockClient{
 		baseURL: "https://go.getblock.io/" + apiKey + "/",
-		client:  &http.Client{},
+		client: &http.Client{
+			Transport: &http.Transport{
+				MaxIdleConns:        100,
+				MaxIdleConnsPerHost: 100,
+			},
+		},
 	}
 }
 
-func (c *getBlockClient) doPostRequest(reqBody interface{}) (*http.Response, error) {
+func (c *GetBlockClient) doPostRequest(reqBody interface{}) (*http.Response, error) {
 	jsonStr, err := json.Marshal(reqBody)
 	if err != nil {
-		return nil, logger.Error(err, "JSON marshal error")
+		return nil, err
 	}
 
 	req, err := http.NewRequest("POST", c.baseURL, bytes.NewBuffer(jsonStr))
 	if err != nil {
-		return nil, logger.Error(err, "HTTP request creation error")
+		return nil, err
 	}
 	req.Header.Set("Content-Type", "application/json")
 
-	resp, err := c.client.Do(req)
-	if err != nil {
-		return nil, logger.Error(err, "HTTP request execution error")
-	}
-
-	return resp, nil
+	return c.client.Do(req)
 }
 
-func (c *getBlockClient) decodeResponse(resp *http.Response, out interface{}) error {
+func (c *GetBlockClient) decodeResponse(resp *http.Response, out interface{}) error {
 	defer resp.Body.Close()
-	if err := json.NewDecoder(resp.Body).Decode(out); err != nil {
-		return logger.Error(err, "JSON decode error")
+	if resp.StatusCode != http.StatusOK {
+		return errors.New("unexpected HTTP status: " + resp.Status)
 	}
-	return nil
+	return json.NewDecoder(resp.Body).Decode(out)
 }
 
-func (c *getBlockClient) GetLastBlockNumber() (*types.GetBlockBaseResponse[string], error) {
+func (c *GetBlockClient) GetLastBlockNumber() (*types.GetBlockBaseResponse[string], error) {
 	reqBody := types.GetBlockBaseRequest{
 		Id:      "getblock.io",
 		JsonRPC: "2.0",
@@ -76,7 +70,7 @@ func (c *getBlockClient) GetLastBlockNumber() (*types.GetBlockBaseResponse[strin
 	return &response, nil
 }
 
-func (c *getBlockClient) GetBlock(blockNumber string) (*types.GetBlockBaseResponse[eth.EthBlock], error) {
+func (c *GetBlockClient) GetBlock(blockNumber string) (*types.GetBlockBaseResponse[eth.EthBlock], error) {
 	reqBody := types.GetBlockBaseRequest{
 		Id:      "getblock.io",
 		JsonRPC: "2.0",

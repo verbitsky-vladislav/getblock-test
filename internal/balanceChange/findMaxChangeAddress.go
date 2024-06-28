@@ -1,4 +1,4 @@
-package balance_change
+package balanceChange
 
 import "math/big"
 

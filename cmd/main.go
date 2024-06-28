@@ -6,7 +6,7 @@ import (
 	logger "getblock-test/pkg"
 )
 
-var apiKey = "3619821a38a74d51b8d70471523eb83f"
+var apiKey = ""
 
 func main() {
 
